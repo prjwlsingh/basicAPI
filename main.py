@@ -15,7 +15,7 @@ class VideoModel(db.Model):
     views = db.Column(db.Integer, nullable=False)
     likes = db.Column(db.Integer, nullable=False)
 
-    def __repr__(self):
+    def __repr__(self): # what does this do
         return f"Video(name= {self.name}, views={self.views}, likes={self.likes})"
 
 # with app.app_context():
@@ -31,7 +31,7 @@ video_put_args.add_argument("likes", type=int, help="Likes on the video is requi
 #how to serialize an object
 
 resource_fields = {
-    'if' : fields.Integer,
+    'id' : fields.Integer,
     'name' : fields.String,
     'views' : fields.Integer,
     'likes' : fields.Integer
@@ -40,15 +40,23 @@ resource_fields = {
 class Video(Resource):
     @marshal_with(resource_fields) # when we return take return value and serialize using the defined fields
     def get(self, video_id):
-        result = VideoModel.query.get(id=video_id)
-        return 
+        result = VideoModel.query.filter_by(id=video_id).first()
+        if not result:
+           abort(404,message='could not find the video with that id')
+        return result 
     
     @marshal_with(resource_fields)
     def put(self, video_id):
-        args = video_put_args.parse_args # dictionary stores all values passed in
-        video = VideoModel(id = video_id, name = args['name'], views = args['views'], likes = args['likes'])
+        args = video_put_args.parse_args() # dictionary stores all values passed in
+
+        # result = VideoModel.query.filter_by(id=video_id).first()
+
+        # if result:
+        #     abort(409,message='video id taken')
+
+        video = VideoModel(name=args["name"], views=args["views"], likes=args["likes"])
         db.session.add(video) # add object to current database session
-        db.session.commit # make permanent changes to db
+        db.session.commit() # make permanent changes to db
 
         return video, 201
     
